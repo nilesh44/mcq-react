@@ -1,3 +1,8 @@
+# Some usefull command
+- creating react template with typescript
+npx create-react-app mcq-react --template typescript
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
