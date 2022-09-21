@@ -3,9 +3,9 @@ import { JsxElement } from "typescript";
 import Error from "../subject/Error";
 import OptionInterface from "./OptionInterface";
 import { Option, OOption } from "./Option";
+import GetAllTest from "../mcqTest/GetAllTest";
+import GetAllSubject from "../subject/GetAllSubject";
 const CreateQuestion = () => {
-  let [subjects, setSubjects] = useState<string[]>([""]);
-  let [allTest, setAllTest] = useState<string[]>([""]);
   const [testName, setTestName] = useState("");
   const [error, setError] = useState("");
   const [subjectName, setSubjectName] = useState("");
@@ -17,71 +17,7 @@ const CreateQuestion = () => {
   const [isCorrect, setIsCorrect] = useState(false);
   let num: number = 0;
   //get all test
-  const getAllTest = (): void => {
-    console.log("getAll test");
-    console.log("subject name : " + subjectName);
-    console.log("&&&&&&&&&&&&&&&&&&");
-    fetch("http://localhost:8083/test/getAll/" + subjectName, {
-      method: "GET", // or 'PUT'
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => response)
-      .then((response) => {
-        if (!response.ok) {
-          console.error("Error:");
-          console.error(
-            "Error:",
-            response.json().then((data) => console.log(data))
-          );
-        } else {
-          console.log(
-            "Success:",
-            response.json().then((data) => {
-              console.log(data);
-              setAllTest(() => data);
-            })
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
-  };
 
-  //get all subject
-  const getSubject = (): void => {
-    fetch("http://localhost:8083/subject/getAll", {
-      method: "GET", // or 'PUT'
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => response)
-      .then((response) => {
-        if (!response.ok) {
-          console.error("Error:");
-          console.error(
-            "Error:",
-            response.json().then((data) => console.log(data))
-          );
-        } else {
-          console.log(
-            "Success:",
-            response.json().then((data) => {
-              console.log(data);
-              setSubjects(() => data);
-            })
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
-  };
-
-  const handleSubmit = () => {};
   //setSubject Name
   const onChangeSelectSubjectName = (
     event: React.ChangeEvent<HTMLSelectElement>
@@ -95,7 +31,7 @@ const CreateQuestion = () => {
   const onChangeSetTestName = (event: React.ChangeEvent<HTMLSelectElement>) => {
     console.log("******** set Test name******");
     console.log(event.target.value);
-    setTestName(event.target.value);
+    setTestName(() => event.target.value);
   };
 
   //setQuestion
@@ -228,45 +164,9 @@ const CreateQuestion = () => {
   };
   return (
     <form className="container" onSubmit={handleCreateQuestion}>
-      <div>
-        <label
-          htmlFor="subjects"
-          style={{ color: "#FC38F8", fontSize: "30px", fontWeight: "bold" }}
-        >
-          Select Subject :
-        </label>
-        <select
-          style={{ color: "#7231FC", fontSize: "25px", fontWeight: "bold" }}
-          name="subjects"
-          id="subjects"
-          onChange={onChangeSelectSubjectName}
-          onClick={getSubject}
-        >
-          {subjects.sort().map((subject) => {
-            return <option value={subject}> {subject}</option>;
-          })}
-        </select>
-      </div>
+      <GetAllSubject setSubjectName={onChangeSelectSubjectName} />
 
-      <div>
-        <label
-          htmlFor="allTest"
-          style={{ color: "#FC38F8", fontSize: "30px", fontWeight: "bold" }}
-        >
-          Select Test :
-        </label>
-        <select
-          style={{ color: "#7231FC", fontSize: "25px", fontWeight: "bold" }}
-          name="allTest"
-          id="allTest"
-          onChange={onChangeSetTestName}
-          onClick={getAllTest}
-        >
-          {allTest.sort().map((test) => {
-            return <option value={test}> {test}</option>;
-          })}
-        </select>
-      </div>
+      <GetAllTest subjectName={subjectName} setTestName={onChangeSetTestName} />
 
       <div className="row mt-5">
         <label
@@ -317,24 +217,7 @@ const CreateQuestion = () => {
             onChange={handleOnChangeValue}
           />
         </div>
-        {/* <div className=" col-sm-2 form-check">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            value=""
-            id="flexCheckDefault"
-            style={{ color: "#F528DD", fontSize: "30px", fontWeight: "bold" }}
-            onChange={handleCheck}
-          />
 
-          <label
-            className="form-check-label"
-            htmlFor="flexCheckDefault"
-            style={{ color: "#F528DD", fontSize: "30px", fontWeight: "bold" }}
-          >
-            mark for correct answer
-          </label>
-        </div> */}
         <div className="col-sm-2 mt-5">
           <input
             type="button"

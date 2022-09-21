@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import Error from "../subject/Error";
+import GetAllSubject from "../subject/GetAllSubject";
 
 const CreateTest = () => {
-  let [subjects, setSubject] = useState<string[]>([""]);
   const [testName, setTestName] = useState("");
   const [error, setError] = useState("");
   const [subjectName, setSubjectName] = useState("");
@@ -61,59 +61,10 @@ const CreateTest = () => {
     });
   };
 
-  //get all subject
-  const getSubject = (): void => {
-    fetch("http://localhost:8083/subject/getAll", {
-      method: "GET", // or 'PUT'
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => response)
-      .then((response) => {
-        if (!response.ok) {
-          console.error("Error:");
-          console.error(
-            "Error:",
-            response.json().then((data) => console.log(data))
-          );
-        } else {
-          console.log(
-            "Success:",
-            response.json().then((data) => {
-              console.log(data);
-              setSubject(() => data);
-            })
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
-  };
-
   //return view
   return (
     <form className="container" onSubmit={handleSubmit}>
-      <div>
-        <label
-          htmlFor="subjects"
-          style={{ color: "#FC38F8", fontSize: "30px", fontWeight: "bold" }}
-        >
-          Select Subject :
-        </label>
-        <select
-          style={{ color: "#7231FC", fontSize: "25px", fontWeight: "bold" }}
-          name="subjects"
-          id="subjects"
-          onChange={handleChangeForOption}
-          onClick={getSubject}
-        >
-          {subjects.sort().map((subject) => {
-            return <option value={subject}> {subject}</option>;
-          })}
-        </select>
-      </div>
+      <GetAllSubject setSubjectName={handleChangeForOption} />
 
       <div className="row mt-5">
         <label

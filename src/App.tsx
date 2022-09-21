@@ -5,6 +5,7 @@ import Subject from "./subject/Subject";
 import GetSubject from "./subject/GetSubject";
 import CreateTest from "./mcqTest/CreateTest";
 import CreateQuestion from "./Questions/CreateQuestion";
+import GetAllQuestion from "./Questions/GetAllQuestion";
 function App() {
   return (
     <div className="App">
@@ -12,6 +13,7 @@ function App() {
       <GetSubject />
       <CreateTest />
       <CreateQuestion />
+      <GetAllQuestion />
     </div>
   );
 }
