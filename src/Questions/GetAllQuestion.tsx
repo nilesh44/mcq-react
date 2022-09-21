@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { GetQuestionResponse } from "./GetQuestionResponseI";
 import SelectSubject from "../subject/GetAllSubject";
 import GetAllTest from "../mcqTest/GetAllTest";
+import { QuestionIdOptionIdMap } from "../props/QuestionIdOptionIdmap";
+import { GetCorrectAnswerResponse } from "../props/GetCorrectAnswerResponse";
 const GetAllQuestion = () => {
   const [GetQuestionResponse, setGetQuestionResponse] =
     useState<GetQuestionResponse[]>();
@@ -9,6 +11,10 @@ const GetAllQuestion = () => {
   const [subjectName, setSubjectName] = useState("");
 
   const [testName, setTestName] = useState("");
+  const [questionIdError, setQuestionIdError] = useState<Map<number, String>>(
+    new Map()
+  );
+  let questionIdOptionIdMap = new Map<number, number>();
 
   const handleSetSubjectName = (
     event: React.ChangeEvent<HTMLSelectElement>
@@ -65,7 +71,63 @@ const GetAllQuestion = () => {
         console.error("Error:", error);
       });
   };
+  const setCorrectAnswer = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    questionId: number
+  ) => {
+    console.log("****setCorrectAnswer");
+    //console.log(questionId);
+    questionIdOptionIdMap.set(questionId, parseInt(event.target.value));
 
+    console.log(questionIdOptionIdMap);
+    console.log(questionIdOptionIdMap.has(questionId));
+  };
+  const submitQuestion = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    questionId: number
+  ) => {
+    console.log(questionIdOptionIdMap.has(questionId));
+    let optionId = questionIdOptionIdMap.get(questionId);
+    console.log(questionIdOptionIdMap);
+    console.log(questionId);
+    console.log(optionId);
+
+    console.log(
+      JSON.stringify({
+        questionId: questionId,
+        optionId: optionId,
+      })
+    );
+
+    fetch("http://localhost:8083/question/getCorrectAnswer", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        questionId: questionId,
+        optionId: optionId,
+      }),
+    })
+      .then((response) => response)
+      .then((response) => {
+        response
+          .json()
+          .then((data: GetCorrectAnswerResponse) =>
+            setQuestionIdError((map) => new Map(map.set(questionId, data.msg)))
+          );
+
+        console.log(
+          "Success:",
+          response.json().then((data) => console.log(data))
+        );
+        console.log(questionIdError);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  };
+  const checkQuestion = (event: React.MouseEvent<HTMLButtonElement>) => {};
   let count = 1;
   return (
     <div>
@@ -88,6 +150,8 @@ const GetAllQuestion = () => {
       </div>
 
       {GetQuestionResponse?.map((question) => {
+        //let questionId: number = question.questionId;
+
         return (
           <div className="row justify-content-start mt-5">
             <div className="col-1">
@@ -131,8 +195,8 @@ const GetAllQuestion = () => {
                         fontSize: "25px",
                         fontWeight: "bold",
                       }}
-                      // value={props.id}
-                      //onChange={(e) => props.getCorrectAnswer(e, parseInt(props.id))}
+                      value={option.optionId}
+                      onChange={(e) => setCorrectAnswer(e, question.questionId)}
                     />
                     <label
                       className="col-10 form-check-label text-start"
@@ -143,11 +207,55 @@ const GetAllQuestion = () => {
                         fontWeight: "bold",
                       }}
                     >
-                      {option}
+                      {option.option}
                     </label>
                   </div>
                 );
               })}
+              <div
+                className="row"
+                style={{
+                  color: "#000000",
+                  fontSize: "30px",
+                  fontWeight: "bold",
+                  backgroundColor: "#FF5C94",
+                }}
+              >
+                <h3 className="text-center">
+                  {questionIdError.get(question.questionId)}
+                </h3>
+              </div>
+            </div>
+            <div className="row">
+              <div className=" col-2">
+                <button
+                  type="submit"
+                  className="btn btn-primary mt-5 mr-3"
+                  style={{
+                    color: "#000000",
+                    fontSize: "30px",
+                    fontWeight: "bold",
+                  }}
+                  value={question.questionId}
+                  onClick={(e) => submitQuestion(e, question.questionId)}
+                >
+                  submit
+                </button>
+              </div>
+              <div className=" col-3">
+                <button
+                  type="submit"
+                  className="btn btn-primary mt-5 mr-3"
+                  style={{
+                    color: "#000000",
+                    fontSize: "30px",
+                    fontWeight: "bold",
+                  }}
+                  // value={}
+                >
+                  check Correct Answer
+                </button>
+              </div>
             </div>
           </div>
         );
