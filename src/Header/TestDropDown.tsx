@@ -1,6 +1,17 @@
 import React from "react";
+import { useAppDispatch } from "../Redux/MainComponentHooks";
+import { changeComponent, MainComponentState } from "../Redux/MainContentSlice";
 
 const TestDropDown = () => {
+  const dispatch = useAppDispatch();
+
+  const gotoCreateTest = () => {
+    console.log("gotoCreateTest");
+    const mainComponentState: MainComponentState = {
+      componentName: "createTest",
+    };
+    dispatch(changeComponent(mainComponentState));
+  };
   return (
     <div className="dropdown">
       <button
@@ -27,7 +38,7 @@ const TestDropDown = () => {
         }}
       >
         <li>
-          <a className="dropdown-item" href="#">
+          <a className="dropdown-item" href="#" onClick={gotoCreateTest}>
             create test
           </a>
         </li>
