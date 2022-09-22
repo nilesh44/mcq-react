@@ -6,9 +6,11 @@ import GetSubject from "./subject/GetSubject";
 import CreateTest from "./mcqTest/CreateTest";
 import CreateQuestion from "./Questions/CreateQuestion";
 import GetAllQuestion from "./Questions/GetAllQuestion";
+import Header from "./Header/Header";
 function App() {
   return (
     <div className="App">
+      <Header />
       <Subject />
       <GetSubject />
       <CreateTest />
