@@ -1,60 +1,80 @@
 import React, { ReactNode, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Error from "./Error";
-import { url } from "inspector";
-
+import { createSubjectUrl } from "../utilities/constant";
+import { ErrorResponse } from "../Dto/ErrorResponse";
+import { SuccessResponse } from "../Dto/SuccessResponse";
+import Success from "./Success";
 const Subject = () => {
   const [subjectName, setSubjectName] = useState("");
-  const [error, setError] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // console.log(event.target.value);
-    //validate string
-    const regex = new RegExp("^[a-zA-Z]*$");
-    if (!regex.test(event.target.value)) {
-      setError(
+  function validateSubjectName(subjectName: string): void {
+    console.log("subject Name " + subjectName);
+    const regex = new RegExp("^[a-zA-Z ]*$");
+    if (
+      subjectName === null ||
+      subjectName === "" ||
+      !regex.test(subjectName)
+    ) {
+      setErrorMsg(
         "only alphabate are allow e.g science . Numbers and special character are not allowed"
       );
     } else {
-      setError("");
+      setErrorMsg("");
     }
-    let upperCaseSubject = event.target.value.toUpperCase().toString();
+  }
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const subjectName: string = event.target.value;
+    validateSubjectName(subjectName);
+
+    let upperCaseSubjectName = subjectName.toUpperCase();
     setSubjectName(() => {
-      return upperCaseSubject;
+      return upperCaseSubjectName;
     });
   };
-  const handleSubmit = (event: React.SyntheticEvent<HTMLFormElement>) => {
-    console.log("handleSubmit called");
+
+  const createSubject = (event: React.SyntheticEvent<HTMLFormElement>) => {
+    console.log("createSubject called");
     event.preventDefault();
-    fetch("http://localhost:8083/subject/create", {
-      method: "POST", // or 'PUT'
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name: subjectName }),
-    })
-      .then((response) => response)
-      .then((response) => {
-        if (!response.ok) {
-          console.error("Error:", error);
-          console.error(
-            "Error:",
-            response.json().then((data) => console.log(data))
-          );
-        } else {
-          console.log(
-            "Success:",
-            response.text().then((data) => console.log(data))
-          );
-        }
+    console.log("subject Name " + subjectName);
+    let subName: string = subjectName.trim();
+    if (subName === "" || subName === null) {
+      setErrorMsg("please Enter subject name");
+    } else {
+      fetch(createSubjectUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: subName }),
       })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+        .then((response) => response)
+        .then((response) => {
+          if (!response.ok) {
+            setSuccessMsg("");
+            response
+              .json()
+              .then((data: ErrorResponse) => setErrorMsg(data.msg));
+            console.error("Error:", errorMsg);
+          } else {
+            setErrorMsg("");
+            response
+              .json()
+              .then((data: SuccessResponse) => setSuccessMsg(data.msg));
+            console.error("success:", successMsg);
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    }
   };
 
   return (
-    <form className="container" onSubmit={handleSubmit}>
+    <form className="container" onSubmit={createSubject}>
       <div className="row mt-5">
         <label
           className="col-sm-2 form-group"
@@ -75,7 +95,10 @@ const Subject = () => {
       </div>
 
       <div>
-        <Error error={error} />
+        <Error error={errorMsg} />
+      </div>
+      <div>
+        <Success successMsg={successMsg} />
       </div>
 
       <button
