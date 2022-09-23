@@ -28,6 +28,7 @@ export const Option: FC<OptionProps> = (props): JSX.Element => {
       </div>
     );
   }
+
   return (
     <div className="row mt-5">
       <label

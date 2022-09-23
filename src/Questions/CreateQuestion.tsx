@@ -5,16 +5,31 @@ import OptionInterface from "./OptionInterface";
 import { Option, OOption } from "./Option";
 import GetAllTest from "../mcqTest/GetAllTest";
 import GetAllSubject from "../subject/GetAllSubject";
+import { ErrorResponse } from "../Dto/ErrorResponse";
+import { SuccessResponse } from "../Dto/SuccessResponse";
+import Success from "../utilities/Success";
+import { CreateQuestionResponse } from "../Dto/CreateQuestionResponse";
+import { GetQuestionResponse } from "./GetQuestionResponseI";
+import GetQuestion from "./GetQuestion";
+
 const CreateQuestion = () => {
   const [testName, setTestName] = useState("");
-  const [error, setError] = useState("");
+
   const [subjectName, setSubjectName] = useState("");
+
   const [question, setQuestion] = useState("");
 
+  const [questionError, setQuestionError] = useState("");
   const [options, setOptions] = useState<OptionInterface[]>([]);
   const [optionCount, setOptionCount] = useState(0);
+
   const [optionValue, setOptionValue] = useState("");
   const [isCorrect, setIsCorrect] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [optrionErrorMsg, setOptrionErrorMsg] = useState("");
+  const [questionResponse, setGetQuestionResponse] =
+    useState<GetQuestionResponse>({ questionId: 0, question: "", options: [] });
   let num: number = 0;
   //get all test
 
@@ -31,6 +46,7 @@ const CreateQuestion = () => {
   const onChangeSetTestName = (event: React.ChangeEvent<HTMLSelectElement>) => {
     console.log("******** set Test name******");
     console.log(event.target.value);
+
     setTestName(() => event.target.value);
   };
 
@@ -38,25 +54,36 @@ const CreateQuestion = () => {
   const onChangeSetQuestion = (event: React.ChangeEvent<HTMLInputElement>) => {
     console.log("******** set Question******");
     console.log(event.target.value);
-    setQuestion(event.target.value);
-  };
-  //handle Add Options
 
-  //   const handleAddOptionsCount = () => {
-  //     setOptionCount((prevoiusCount) => {
-  //       return (prevoiusCount = prevoiusCount + 1);
-  //     });
-  //   };
+    setQuestion(event.target.value);
+    setQuestionError("");
+  };
+
+  const handleChangeOptionValue = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    console.log("------handleOnChangeValue-------");
+
+    let option: string = event.target.value;
+    console.log(option);
+    if (question === "" || question === null) {
+      setQuestionError("please enter question");
+      setOptionValue(option);
+    } else if (option === "" || option === null) {
+      setOptrionErrorMsg("please enter option");
+      setOptionValue("");
+      setQuestionError("");
+    } else {
+      setOptionValue(option);
+      setOptrionErrorMsg("");
+    }
+  };
 
   const removeOption = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     console.log("^^^^^^^^^^^removeOption^^^^^^^^^^^^^");
     console.log("value from event " + event.currentTarget.value);
-    // let filterd = newArrayOptions.filter((option) => {
-    //   console.log(option.id !== parseInt(event.currentTarget.value, 10));
 
-    //   return option.id !== parseInt(event.currentTarget.value, 10);
-    // });
     const value = parseInt(event.currentTarget.value);
     console.log(value);
 
@@ -71,64 +98,141 @@ const CreateQuestion = () => {
     //console.log(filterd);
   };
   const handleAddOptions = () => {
-    setOptionCount((prevoiusCount) => {
-      return (prevoiusCount = prevoiusCount + 1);
-    });
+    if (question === "" || question === null) {
+      setQuestionError("please enter question");
+    } else if (optionValue === "" || optionValue === null) {
+      setOptrionErrorMsg("please enter option");
+    } else {
+      setOptionCount((prevoiusCount) => {
+        return (prevoiusCount = prevoiusCount + 1);
+      });
 
-    setOptions((option) => {
-      return [
-        ...option,
-        {
-          id: optionCount,
-          value: optionValue,
-          correct: isCorrect,
-        },
-      ];
-    });
-    console.log("after adding new option");
-    console.log(...options);
+      setOptions((option) => {
+        return [
+          ...option,
+          {
+            id: optionCount,
+            value: optionValue,
+            correct: isCorrect,
+          },
+        ];
+      });
+      console.log("after adding new option");
+      console.log(...options);
+      setOptionValue("");
+      setOptrionErrorMsg("");
+    }
   };
 
-  const handleOnChangeValue = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("------handleOnChangeValue-------");
-    console.log(event.target.value);
-    setOptionValue(event.target.value);
-  };
-
+  function validateBeforeCreateQuestion(): boolean {
+    console.log("validateBeforeCreateTest");
+    console.log(subjectName);
+    if (subjectName === "" || subjectName === null) {
+      setErrorMsg("please select subject");
+      return false;
+    }
+    if (testName === "" || testName === null) {
+      setErrorMsg("please select test ");
+      return false;
+    }
+    if (question === "" || question === null) {
+      setErrorMsg("please enter question ");
+      return false;
+    }
+    if (optionValue == "" || optionValue === null) {
+      setErrorMsg("please enter options ");
+    }
+    if (options.length === 0) {
+      setErrorMsg("please add options ");
+      return false;
+    }
+    if (options.length === 1) {
+      setErrorMsg("at least question should have two options");
+      return false;
+    }
+    if (options.filter((opt) => opt.correct === true).length != 1) {
+      setErrorMsg("select only one correct answerrrr");
+      return false;
+    }
+    return true;
+  }
   //handle createQuestion
   const handleCreateQuestion = (
     event: React.SyntheticEvent<HTMLFormElement>
   ) => {
     console.log("handleSubmit for test");
-
-    let optionsToSend = options.map((opt) => {
-      return { option: opt.value, isCorrect: opt.correct };
-    });
-    console.log(
-      JSON.stringify({
-        testName: testName,
-        subjectName: subjectName,
-        question: question,
-        options: optionsToSend,
-      })
-    );
     event.preventDefault();
-    fetch("http://localhost:8083/questionWithOptions/create", {
-      method: "POST", // or 'PUT'
+    if (validateBeforeCreateQuestion()) {
+      let optionsToSend = options.map((opt) => {
+        return { option: opt.value, isCorrect: opt.correct };
+      });
+      console.log(
+        JSON.stringify({
+          testName: testName,
+          subjectName: subjectName,
+          question: question,
+          options: optionsToSend,
+        })
+      );
+      event.preventDefault();
+      fetch("http://localhost:8083/questionWithOptions/create", {
+        method: "POST", // or 'PUT'
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          testName: testName,
+          subjectName: subjectName,
+          question: question,
+          options: optionsToSend,
+        }),
+      })
+        .then((response) => response)
+        .then((response) => {
+          if (!response.ok) {
+            setSuccessMsg("");
+            response
+              .json()
+              .then((data: ErrorResponse) => setErrorMsg(data.msg));
+            console.error("Error:", errorMsg);
+          } else {
+            setErrorMsg("");
+            response.json().then((data: CreateQuestionResponse) => {
+              setSuccessMsg("created question successfully ");
+              getQuestion(data.questionId);
+            });
+            console.error("success:", successMsg);
+            setQuestion("");
+            setOptionValue("");
+            setOptionCount(0);
+            setOptions([]);
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    }
+  };
+
+  const getQuestion = (questionId: string): void => {
+    console.log("getAll question");
+    // console.log("subject name : " + subjectName);
+    console.log("&&&&&&&&&&&&&&&&&&");
+    console.log("questionId : " + questionId);
+
+    let url: string = "http://localhost:8083/question" + "/" + questionId;
+
+    console.log(url);
+    fetch(url, {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        testName: testName,
-        subjectName: subjectName,
-        question: question,
-        options: optionsToSend,
-      }),
     })
       .then((response) => response)
       .then((response) => {
         if (!response.ok) {
-          console.error("Error:", error);
+          console.error("Error:");
           console.error(
             "Error:",
             response.json().then((data) => console.log(data))
@@ -136,7 +240,10 @@ const CreateQuestion = () => {
         } else {
           console.log(
             "Success:",
-            response.text().then((data) => console.log(data))
+            response.json().then((data) => {
+              console.log(data);
+              setGetQuestionResponse(() => data);
+            })
           );
         }
       })
@@ -144,10 +251,6 @@ const CreateQuestion = () => {
         console.error("Error:", error);
       });
   };
-
-  //   const handleCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //     setIsCorrect(event.target.checked);
-  //   };
 
   const setCorrectAnswer = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -179,11 +282,14 @@ const CreateQuestion = () => {
           <input
             type="text"
             className="form-control"
-            id="subject"
+            id="question"
             placeholder="Enter Question"
             value={question}
             onChange={onChangeSetQuestion}
           />
+        </div>
+        <div>
+          <Error error={questionError} />
         </div>
       </div>
       <div className="row">
@@ -214,7 +320,7 @@ const CreateQuestion = () => {
             id="option"
             placeholder="Enter Option"
             value={optionValue}
-            onChange={handleOnChangeValue}
+            onChange={handleChangeOptionValue}
           />
         </div>
 
@@ -232,10 +338,16 @@ const CreateQuestion = () => {
             }}
           />
         </div>
+        <div>
+          <Error error={optrionErrorMsg} />
+        </div>
       </div>
 
       <div>
-        <Error error={error} />
+        <Error error={errorMsg} />
+      </div>
+      <div>
+        <Success successMsg={successMsg} />
       </div>
 
       <button
@@ -245,6 +357,10 @@ const CreateQuestion = () => {
       >
         create new Question
       </button>
+      <GetQuestion
+        question={questionResponse?.question}
+        options={questionResponse?.options}
+      />
     </form>
   );
 };
