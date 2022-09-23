@@ -4,7 +4,7 @@ import Error from "./Error";
 import { createSubjectUrl } from "../utilities/constant";
 import { ErrorResponse } from "../Dto/ErrorResponse";
 import { SuccessResponse } from "../Dto/SuccessResponse";
-import Success from "./Success";
+import Success from "../utilities/Success";
 const Subject = () => {
   const [subjectName, setSubjectName] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
