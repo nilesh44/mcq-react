@@ -16,7 +16,7 @@ const CreateTest = () => {
     const regex = new RegExp("^[a-zA-Z0-9]*$");
     if (!regex.test(testName)) {
       setErrorMsg(
-        "only alphabate and numbers are allow e.g science . special character are not allowed"
+        "only alphabate and numbers are allow e.g science .  special character are not allowed"
       );
     } else {
       setErrorMsg("");
